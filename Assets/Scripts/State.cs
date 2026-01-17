@@ -1,25 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
 
 // Clase base que representa un estado nunha máquina de estados finitos.
 // Implementa o patrón State para controlar o comportamento dun NPC.
-public class State {
+public class State
+{
 
     // Enumeración dos posibles estados do NPC
-    public enum STATE {
+    public enum STATE
+    {
 
         IDLE,       // Inactivo
         PATROL,     // Patrullando
         PURSUE,     // Perseguindo
         ATTACK,     // Atacando
         SLEEP,      // Durmindo
-        RUNAWAY     // Fuxindo
+        RUNAWAY,    // Fuxindo
+        SEARCH      // Buscando
     };
 
     // Enumeración dos eventos do ciclo de vida dun estado
-    public enum EVENT {
+    public enum EVENT
+    {
 
         ENTER,      // Entrada ao estado
         UPDATE,     // Actualización do estado
@@ -427,4 +432,69 @@ public class RunAway : State
         animator.ResetTrigger("isRunning");     // Limpa o trigger da animación de correr
         base.Exit();                        // Chama ao método Exit da clase base
     }
+
+}
+
+//=========================================================================
+// Estado SEARCH (Buscar)
+// El NPC busca al jugador cando lo pierde de vista
+//=========================================================================
+public class Search : State
+{
+    float searchDuration = 5.0f; // Dueración del tiempo de busqueda del enemigo
+    float searchTimer = 0.0f;    // Temporizador para controlar el tiempo de búsqueda
+    Vector3 lasKnowPosition; // Ultima posición conocida del jugador
+
+    // Creamos el metodo constructor de la clase Search
+    // Para ello llamamos al constructor de la clase base State y obtener los parametros necesarios
+    //previamente definifos en la clase base State
+    public Search(GameObject _npc, NavMeshAgent _agent, Animator _animator, Transform _player)
+            : base(_npc, _agent, _animator, _player)
+    {
+        name = STATE.SEARCH; // Definimos el nombre del estado como SEARCH
+        agent.speed = 2.5f; // Velocidad a la qu se movera el agente durante la busqueda
+        agent.isStopped = false; // Nos aseguramos que el agente no este detenido
+        lasKnowPosition = _player.position; // Introducimos la ultima posición del jugador para que el agente busque
+    }
+
+    public override void Enter()
+    {
+        animator.SetTrigger("isWalking");   // Activamos la clase de caminar
+        agent.SetDestination(lasKnowPosition); // Indicamos al Agente que debe buscar en la última posición conocida del Player
+        searchTimer = 0.0f;
+        base.Enter(); // Se activa el metodo enter desde la clase base
+    }
+
+    //El metodo UPDATE se encarga de que el guardia busque al jugador
+    // durante el tiempo preestablecido, en cado de encontrarlo
+    // su estado cambia a PURSUE, en el caso de que no lo encuentre y el tiempo de busqueda asignado
+    // se agote entonces volvemos al estado PATROL
+    public override void Update()
+    {
+        searchTimer += Time.deltaTime;
+
+        // Si el agente vuelve a visualizar al jugador se inicia de nuevo la persecución
+        if (CanSeePlayer())
+        {
+            nextState = new Pursue(npc, agent, animator, player);
+            stage = EVENT.EXIT; // El Estado SEARCH finaliza para que PURSUE pueda activarse
+            return;
+        }
+
+        // Si ya paso el tiempo preestablecido para la busqueda , el estado vuelve a cambiar a PATROL
+        if (searchTimer >= searchDuration)
+        {
+            nextState = new Patrol(npc, agent, animator, player);
+            stage = EVENT.EXIT;
+        }
+    }
+
+    // Por ultimo al salir se limpian las animaciones
+    public override void Exit()
+    {
+        animator.ResetTrigger("isWalking");
+        base.Exit();
+    }
+
+
 }
