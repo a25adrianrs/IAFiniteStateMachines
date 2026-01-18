@@ -61,21 +61,9 @@ public class Search : State
      ```
      - Por ultimo queda el metodo Exit el cual al igual que en el resto de estados limpia las animaciones.
        ```csharp
-       public override void Update(){
-        searchTimer += Time.deltaTime;
-
-        // Si el agente vuelve a visualizar al jugador se inicia de nuevo la persecución
-        if (CanSeePlayer())
+          public override void Exit()
         {
-            nextState = new Pursue(npc, agent, animator, player);
-            stage = EVENT.EXIT; // El Estado SEARCH finaliza para que PURSUE pueda activarse
-            return;
+        animator.ResetTrigger("isWalking");
+        base.Exit();
         }
-
-        // Si ya paso el tiempo preestablecido para la busqueda , el estado vuelve a cambiar a PATROL
-        if (searchTimer >= searchDuration)
-        {
-            nextState = new Patrol(npc, agent, animator, player);
-            stage = EVENT.EXIT;
-        }}
        ```
