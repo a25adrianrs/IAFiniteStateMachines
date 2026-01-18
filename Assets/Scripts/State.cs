@@ -441,7 +441,7 @@ public class RunAway : State
 //=========================================================================
 public class Search : State
 {
-    float searchDuration = 5.0f; // Dueración del tiempo de busqueda del enemigo
+    float searchDuration = 5.0f; // Duración del tiempo de busqueda del enemigo
     float searchTimer = 0.0f;    // Temporizador para controlar el tiempo de búsqueda
     Vector3 lasKnowPosition; // Ultima posición conocida del jugador
 
@@ -461,7 +461,7 @@ public class Search : State
     {
         animator.SetTrigger("isWalking");   // Activamos la clase de caminar
         agent.SetDestination(lasKnowPosition); // Indicamos al Agente que debe buscar en la última posición conocida del Player
-        searchTimer = 0.0f;
+        searchTimer = 0.0f; // Reiniciamos el temporizador de búsqueda
         base.Enter(); // Se activa el metodo enter desde la clase base
     }
 
